@@ -3,123 +3,134 @@
 import { motion } from 'framer-motion'
 import { SectionWrapper } from '@/components/ui/SectionWrapper'
 import { GlassCard } from '@/components/ui/GlassCard'
-import type { RegistroMensual } from '@/types/database'
-import { formatMonth } from '@/lib/utils'
+import type { MonthlyEntry } from '@/types/database'
+import { MONTH_NAMES, STATUS_COLORS, STATUS_LABELS } from '@/types/database'
 
 interface RegistroMensualSectionProps {
-  registros: RegistroMensual[]
+  entries: MonthlyEntry[]
 }
 
-interface StatItemProps {
-  label: string
-  value: number
-  unit?: string
-  color: string
-  max?: number
+function formatMonth(month: string): string {
+  const [year, m] = month.split('-')
+  const num = parseInt(m ?? '0', 10)
+  return `${MONTH_NAMES[num] ?? month} ${year ?? ''}`
 }
 
-function StatItem({ label, value, unit = '', color, max = 100 }: StatItemProps): JSX.Element {
-  const pct = Math.min((value / max) * 100, 100)
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-1">
-        <span className="font-mono-custom text-xs text-slate-400">{label}</span>
-        <span className="font-mono-custom text-xs font-bold" style={{ color }}>
-          {value}{unit}
-        </span>
-      </div>
-      <div className="skill-bar">
-        <motion.div
-          className="skill-bar-fill"
-          initial={{ width: 0 }}
-          whileInView={{ width: `${pct}%` }}
-          viewport={{ once: true }}
-          transition={{ duration: 1, ease: 'easeOut' }}
-          style={{ background: `linear-gradient(90deg, ${color}, ${color}88)` }}
-        />
-      </div>
-    </div>
-  )
-}
-
-export function RegistroMensualSection({ registros }: RegistroMensualSectionProps): JSX.Element {
-  const latest = registros[0]
+export function RegistroMensualSection({ entries }: RegistroMensualSectionProps): JSX.Element {
+  const sorted = [...entries].sort((a, b) => b.month.localeCompare(a.month))
+  const latest = sorted[0]
+  const rest = sorted.slice(1)
 
   return (
     <SectionWrapper
       id="registro"
-      label="// data_stream.log"
+      label="// monthly_entries.log"
       title="Registro Mensual"
       titleColor="cyan"
     >
-      {registros.length === 0 ? (
+      {entries.length === 0 ? (
         <div className="text-center text-slate-500 font-mono-custom py-12">
-          {'> no_data_found — ejecutar /admin para cargar registros'}
+          {'> no_entries_found — agrega registros desde /admin'}
         </div>
       ) : (
-        <div className="space-y-8">
-          {/* Current month highlight */}
+        <div className="space-y-6">
+          {/* Latest entry featured */}
           {latest ? (
             <GlassCard glow="cyan" hover={false} className="border-[rgba(0,229,255,0.3)]">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-6">
-                <div>
-                  <p className="section-label mb-1">PERÍODO ACTIVO</p>
-                  <h3 className="font-mono-custom text-2xl font-bold text-[#00E5FF]">
-                    {formatMonth(latest.mes, latest.ano)}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {latest.image_url ? (
+                  <div className="h-56 rounded-xl overflow-hidden border border-[rgba(0,229,255,0.15)]">
+                    <img src={latest.image_url} alt={latest.title} className="w-full h-full object-cover" />
+                  </div>
+                ) : null}
+                <div className={latest.image_url ? '' : 'md:col-span-2'}>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span
+                      className="font-mono-custom text-xs px-2 py-1 rounded"
+                      style={{
+                        color: STATUS_COLORS[latest.status] ?? '#00E5FF',
+                        background: `${STATUS_COLORS[latest.status] ?? '#00E5FF'}15`,
+                      }}
+                    >
+                      {STATUS_LABELS[latest.status]}
+                    </span>
+                    <span className="font-mono-custom text-xs text-slate-500">
+                      {formatMonth(latest.month)}
+                    </span>
+                  </div>
+                  <h3 className="font-mono-custom text-2xl font-bold mb-2">
+                    {latest.highlight_word ? (
+                      <>
+                        <span className="text-slate-300">{latest.title.replace(latest.highlight_word, '')}</span>
+                        <span className="text-[#00E5FF]" style={{ textShadow: '0 0 20px rgba(0,229,255,0.5)' }}>
+                          {latest.highlight_word}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-[#00E5FF]">{latest.title}</span>
+                    )}
                   </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono-custom text-xs text-slate-500">XP ganado:</span>
-                  <span
-                    className="font-mono-custom text-xl font-black text-[#00FF88]"
-                    style={{ textShadow: '0 0 20px rgba(0,255,136,0.5)' }}
-                  >
-                    +{latest.nivel_xp.toLocaleString()}
-                  </span>
+                  {latest.description ? (
+                    <p className="font-mono-custom text-sm text-slate-400 leading-relaxed">
+                      {latest.description}
+                    </p>
+                  ) : null}
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                <StatItem label="Horas de estudio" value={latest.horas_estudio} unit="h" color="#00E5FF" max={200} />
-                <StatItem label="Certs completados" value={latest.certs_completados} color="#9B5CFF" max={10} />
-                <StatItem label="Proyectos activos" value={latest.proyectos_activos} color="#00FF88" max={20} />
-                <StatItem label="Vulns encontradas" value={latest.vulnerabilidades_encontradas} color="#F59E0B" max={50} />
-              </div>
-
-              {latest.notas ? (
-                <div className="mt-6 p-4 rounded-lg bg-[rgba(0,229,255,0.03)] border border-[rgba(0,229,255,0.1)]">
-                  <p className="font-mono-custom text-xs text-slate-500 mb-1">{'// notas'}</p>
-                  <p className="font-mono-custom text-sm text-slate-300">{latest.notas}</p>
-                </div>
-              ) : null}
             </GlassCard>
           ) : null}
 
-          {/* History grid */}
-          {registros.length > 1 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {registros.slice(1).map((reg, i) => (
-                <GlassCard key={reg.id} delay={i * 0.05} glow="purple" className="p-4">
-                  <p className="font-mono-custom text-xs text-slate-500 mb-2">
-                    {formatMonth(reg.mes, reg.ano)}
-                  </p>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span className="font-mono-custom text-xs text-slate-600">hrs</span>
-                      <span className="font-mono-custom text-xs text-[#00E5FF]">{reg.horas_estudio}h</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-mono-custom text-xs text-slate-600">xp</span>
-                      <span className="font-mono-custom text-xs text-[#00FF88]">+{reg.nivel_xp}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-mono-custom text-xs text-slate-600">vulns</span>
-                      <span className="font-mono-custom text-xs text-[#F59E0B]">{reg.vulnerabilidades_encontradas}</span>
-                    </div>
-                  </div>
-                </GlassCard>
-              ))}
+          {/* Rest of entries grid */}
+          {rest.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {rest.map((entry, i) => {
+                const color = STATUS_COLORS[entry.status] ?? '#00E5FF'
+                return (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                  >
+                    <GlassCard
+                      hover
+                      glow="none"
+                      className="h-full"
+                      style={{ borderColor: `${color}20` } as React.CSSProperties}
+                    >
+                      {entry.image_url ? (
+                        <div className="h-32 rounded-lg overflow-hidden mb-3 border border-[rgba(255,255,255,0.05)]">
+                          <img src={entry.image_url} alt={entry.title} className="w-full h-full object-cover opacity-80" />
+                        </div>
+                      ) : null}
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono-custom text-xs text-slate-500">{formatMonth(entry.month)}</span>
+                        <span
+                          className="font-mono-custom text-xs px-2 py-0.5 rounded"
+                          style={{ color, background: `${color}15` }}
+                        >
+                          {entry.status}
+                        </span>
+                      </div>
+                      <h3 className="font-mono-custom font-bold text-sm text-slate-200 mb-1 line-clamp-2">
+                        {entry.highlight_word ? (
+                          <>
+                            {entry.title.split(entry.highlight_word)[0]}
+                            <span style={{ color }}>{entry.highlight_word}</span>
+                            {entry.title.split(entry.highlight_word)[1]}
+                          </>
+                        ) : entry.title}
+                      </h3>
+                      {entry.description ? (
+                        <p className="font-mono-custom text-xs text-slate-500 line-clamp-2 mt-1">
+                          {entry.description}
+                        </p>
+                      ) : null}
+                    </GlassCard>
+                  </motion.div>
+                )
+              })}
             </div>
           ) : null}
         </div>

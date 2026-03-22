@@ -11,6 +11,7 @@ interface SectionWrapperProps {
   label?: string
   title?: string
   titleColor?: 'cyan' | 'purple' | 'green'
+  centered?: boolean
 }
 
 export function SectionWrapper({
@@ -20,47 +21,71 @@ export function SectionWrapper({
   label,
   title,
   titleColor = 'cyan',
+  centered = false,
 }: SectionWrapperProps): JSX.Element {
   const ref = useRef<HTMLElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
+  const isInView = useInView(ref, { once: true, margin: '-80px' })
 
-  const colorMap = {
-    cyan: 'text-[#00E5FF] drop-shadow-[0_0_30px_rgba(0,229,255,0.5)]',
-    purple: 'text-[#9B5CFF] drop-shadow-[0_0_30px_rgba(155,92,255,0.5)]',
-    green: 'text-[#00FF88] drop-shadow-[0_0_30px_rgba(0,255,136,0.5)]',
+  const colors = {
+    cyan: { text: '#00E5FF', glow: 'rgba(0,229,255,0.5)', gradient: '#00E5FF' },
+    purple: { text: '#9B5CFF', glow: 'rgba(155,92,255,0.5)', gradient: '#9B5CFF' },
+    green: { text: '#00FF88', glow: 'rgba(0,255,136,0.5)', gradient: '#00FF88' },
   }
+
+  const c = colors[titleColor]
 
   return (
     <section
       id={id}
       ref={ref}
-      className={cn('relative z-10 py-20 px-4 md:px-8 max-w-7xl mx-auto', className)}
+      className={cn('relative z-10 py-24 px-4 md:px-8', className)}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-        transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
-      >
-        {(label ?? title) ? (
-          <div className="mb-12">
-            {label ? (
-              <p className="section-label mb-2">{label}</p>
-            ) : null}
-            {title ? (
-              <h2 className={cn('section-title font-mono-custom', colorMap[titleColor])}>
-                {title}
-              </h2>
-            ) : null}
-            <div
-              className="mt-3 h-px w-24"
-              style={{
-                background: `linear-gradient(90deg, ${titleColor === 'cyan' ? '#00E5FF' : titleColor === 'purple' ? '#9B5CFF' : '#00FF88'}, transparent)`,
-              }}
-            />
-          </div>
-        ) : null}
-        {children}
-      </motion.div>
+      <div className={cn('max-w-7xl mx-auto w-full', centered && 'flex flex-col items-center text-center')}>
+        <motion.div
+          className="w-full"
+          initial={{ opacity: 0, y: 50 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
+          transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+        >
+          {(label ?? title) ? (
+            <div className={cn('mb-14', centered && 'flex flex-col items-center')}>
+              {label ? (
+                <motion.p
+                  className="section-label mb-3 font-mono-custom"
+                  style={{ color: c.text }}
+                  initial={{ opacity: 0, x: centered ? 0 : -20 }}
+                  animate={isInView ? { opacity: 0.55, x: 0 } : { opacity: 0, x: centered ? 0 : -20 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                >
+                  {label}
+                </motion.p>
+              ) : null}
+              {title ? (
+                <motion.h2
+                  className="section-title font-mono-custom"
+                  style={{ color: c.text, textShadow: `0 0 40px ${c.glow}` }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                  transition={{ duration: 0.7, delay: 0.15 }}
+                >
+                  {title}
+                </motion.h2>
+              ) : null}
+
+              {/* Animated underline */}
+              <motion.div
+                className="mt-4 h-px rounded-full"
+                style={{ background: `linear-gradient(90deg, ${c.gradient}, transparent)` }}
+                initial={{ width: 0 }}
+                animate={isInView ? { width: centered ? 120 : 80 } : { width: 0 }}
+                transition={{ duration: 0.8, delay: 0.3, ease: [0.4, 0, 0.2, 1] }}
+              />
+            </div>
+          ) : null}
+
+          {children}
+        </motion.div>
+      </div>
     </section>
   )
 }

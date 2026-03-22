@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Read(//usr/local/bin/**)",
+      "Bash(command -v node)",
+      "Bash(echo \"PATH=$PATH\")",
+      "Read(//c/Program Files/nodejs//**)",
+      "Read(//c/Users/The Monarch/AppData/Roaming/**)",
+      "Read(//c/Users/The Monarch/AppData/Local/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(export:*)",
+      "Bash(PATH=\"/c/Program Files/nodejs:$PATH\" npx --prefix \"/c/Users/The Monarch/Desktop/PORTAFOLIO PERSONAL\" tsc --noEmit --project \"/c/Users/The Monarch/Desktop/PORTAFOLIO PERSONAL/tsconfig.json\" 2>&1 | head -80)",
+      "Bash(find:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)"
+    ]
+  }
+}

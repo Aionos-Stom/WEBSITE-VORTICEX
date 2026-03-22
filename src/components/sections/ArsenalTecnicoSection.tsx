@@ -1,160 +1,105 @@
 'use client'
 
-import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, useInView } from 'framer-motion'
+import { useRef } from 'react'
 import { SectionWrapper } from '@/components/ui/SectionWrapper'
-import { GlassCard } from '@/components/ui/GlassCard'
-import type { ArsenalTecnico } from '@/types/database'
-import { cn } from '@/lib/utils'
+import type { Skill } from '@/types/database'
+import { COLOR_MAP } from '@/types/database'
 
 interface ArsenalTecnicoSectionProps {
-  arsenal: ArsenalTecnico[]
+  skills: Skill[]
 }
 
-const CATEGORIA_COLORS: Record<string, string> = {
-  'Lenguajes': '#00E5FF',
-  'Frameworks': '#9B5CFF',
-  'Seguridad': '#FF4444',
-  'Cloud': '#F59E0B',
-  'DevOps': '#00FF88',
-  'Bases de Datos': '#FF6B6B',
-  'Herramientas': '#64748B',
-  'default': '#00E5FF',
-}
+function SkillCard({ skill, index }: { skill: Skill; index: number }): JSX.Element {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, margin: '-40px' })
+  const color = COLOR_MAP[skill.color_class] ?? '#9B5CFF'
 
-function SkillBar({ nivel, color }: { nivel: number; color: string }): JSX.Element {
   return (
-    <div className="flex gap-1 mt-2">
-      {Array.from({ length: 10 }).map((_, i) => (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
+      animate={inView ? { opacity: 1, x: 0 } : {}}
+      transition={{ duration: 0.6, delay: index * 0.06, ease: [0.4, 0, 0.2, 1] }}
+      className="group relative"
+    >
+      {/* Card */}
+      <div className="glass-card p-4 transition-all duration-300 group-hover:border-opacity-40"
+        style={{ borderColor: `${color}25` }}
+      >
+        <div className="flex justify-between items-center mb-3">
+          <span
+            className="font-mono-custom text-sm font-bold transition-all duration-300"
+            style={{ color: 'rgba(226,232,240,0.9)' }}
+          >
+            {skill.name}
+          </span>
+          <span
+            className="font-mono-custom text-xs font-black px-2 py-0.5 rounded-md"
+            style={{
+              color,
+              background: `${color}15`,
+              boxShadow: `0 0 8px ${color}30`,
+            }}
+          >
+            {skill.percentage}%
+          </span>
+        </div>
+
+        {/* Bar */}
+        <div className="relative h-1.5 bg-[rgba(255,255,255,0.04)] rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={inView ? { width: `${skill.percentage}%` } : { width: 0 }}
+            transition={{ duration: 1.4, ease: [0.4, 0, 0.2, 1], delay: index * 0.06 + 0.2 }}
+            className="absolute h-full rounded-full"
+            style={{
+              background: `linear-gradient(90deg, ${color}70, ${color})`,
+              boxShadow: `0 0 12px ${color}60`,
+            }}
+          />
+          {/* Shimmer on hover */}
+          <motion.div
+            className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            style={{
+              background: `linear-gradient(90deg, transparent, ${color}50, transparent)`,
+              backgroundSize: '200% 100%',
+            }}
+            animate={{ backgroundPosition: ['200% center', '-200% center'] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: 'linear' }}
+          />
+        </div>
+
+        {/* Hover glow line */}
         <motion.div
-          key={i}
-          initial={{ scaleY: 0 }}
-          whileInView={{ scaleY: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: i * 0.05, duration: 0.3 }}
-          className="flex-1 h-1 rounded-full"
-          style={{
-            background: i < nivel
-              ? `${color}`
-              : 'rgba(255,255,255,0.05)',
-            boxShadow: i < nivel ? `0 0 4px ${color}80` : 'none',
-          }}
+          className="absolute bottom-0 left-0 right-0 h-px rounded-b-[16px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{ background: `linear-gradient(90deg, transparent, ${color}60, transparent)` }}
         />
-      ))}
-    </div>
+      </div>
+    </motion.div>
   )
 }
 
-export function ArsenalTecnicoSection({ arsenal }: ArsenalTecnicoSectionProps): JSX.Element {
-  const categorias = ['Todas', ...Array.from(new Set(arsenal.map((a) => a.categoria)))]
-  const [selected, setSelected] = useState('Todas')
-
-  const filtered = selected === 'Todas'
-    ? arsenal
-    : arsenal.filter((a) => a.categoria === selected)
+export function ArsenalTecnicoSection({ skills }: ArsenalTecnicoSectionProps): JSX.Element {
+  const sorted = [...skills].sort((a, b) => a.sort_order - b.sort_order)
 
   return (
     <SectionWrapper
       id="arsenal"
-      label="// tech_stack.json"
+      label="// skills.json"
       title="Arsenal Técnico"
       titleColor="purple"
     >
-      {arsenal.length === 0 ? (
+      {skills.length === 0 ? (
         <div className="text-center text-slate-500 font-mono-custom py-12">
-          {'> arsenal_vacio — carga tus tecnologías desde /admin'}
+          {'> arsenal_vacio — agrega skills desde /admin'}
         </div>
       ) : (
-        <>
-          {/* Category filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {categorias.map((cat) => {
-              const color = CATEGORIA_COLORS[cat] ?? CATEGORIA_COLORS['default']
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setSelected(cat)}
-                  className={cn(
-                    'font-mono-custom text-xs px-3 py-1.5 rounded border transition-all duration-200',
-                    selected === cat
-                      ? 'text-black font-bold'
-                      : 'text-slate-400 border-[rgba(255,255,255,0.1)] hover:border-[rgba(0,229,255,0.3)]'
-                  )}
-                  style={
-                    selected === cat
-                      ? { background: color, borderColor: color }
-                      : {}
-                  }
-                >
-                  {cat}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Skills grid */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={selected}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-            >
-              {filtered.map((skill, i) => {
-                const color = skill.color ?? CATEGORIA_COLORS[skill.categoria] ?? CATEGORIA_COLORS['default']!
-                return (
-                  <motion.div
-                    key={skill.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.04 }}
-                  >
-                    <GlassCard
-                      hover
-                      glow="none"
-                      className="p-4 group transition-all duration-300"
-                      style={{
-                        borderColor: `${color}20`,
-                      } as React.CSSProperties}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          {skill.icono ? (
-                            <span className="text-2xl mb-2 block">{skill.icono}</span>
-                          ) : null}
-                          <h3
-                            className="font-mono-custom font-bold text-sm"
-                            style={{ color }}
-                          >
-                            {skill.nombre}
-                          </h3>
-                          <p className="font-mono-custom text-xs text-slate-600 mt-0.5">
-                            {skill.categoria}
-                          </p>
-                        </div>
-                        <span
-                          className="font-mono-custom text-xs font-black px-2 py-0.5 rounded"
-                          style={{ color, background: `${color}15` }}
-                        >
-                          {skill.nivel * 10}%
-                        </span>
-                      </div>
-                      <SkillBar nivel={skill.nivel} color={color} />
-                      {skill.descripcion ? (
-                        <p className="font-mono-custom text-xs text-slate-500 mt-3 leading-relaxed opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                          {skill.descripcion}
-                        </p>
-                      ) : null}
-                    </GlassCard>
-                  </motion.div>
-                )
-              })}
-            </motion.div>
-          </AnimatePresence>
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-4xl">
+          {sorted.map((skill, i) => (
+            <SkillCard key={skill.id} skill={skill} index={i} />
+          ))}
+        </div>
       )}
     </SectionWrapper>
   )

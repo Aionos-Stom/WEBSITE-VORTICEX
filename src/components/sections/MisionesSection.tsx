@@ -3,185 +3,156 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SectionWrapper } from '@/components/ui/SectionWrapper'
-import { GlassCard } from '@/components/ui/GlassCard'
-import type { Mision } from '@/types/database'
-import { getEstadoColor, formatDate } from '@/lib/utils'
+import type { Project } from '@/types/database'
 
 interface MisionesSectionProps {
-  misiones: Mision[]
+  projects: Project[]
 }
 
-const ESTADO_LABELS: Record<string, string> = {
-  COMPLETADA: '✓ COMPLETADA',
-  EN_PROGRESO: '◎ EN PROGRESO',
-  PLANIFICADA: '○ PLANIFICADA',
-}
-
-function DifficultyBars({ nivel }: { nivel: number }): JSX.Element {
-  return (
-    <div className="flex gap-1">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div
-          key={i}
-          className="w-4 h-1 rounded-full"
-          style={{
-            background: i < nivel ? '#FF4444' : 'rgba(255,68,68,0.15)',
-            boxShadow: i < nivel ? '0 0 4px rgba(255,68,68,0.5)' : 'none',
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-function MisionesSection({ misiones }: MisionesSectionProps): JSX.Element {
-  const [filter, setFilter] = useState<string>('TODAS')
-  const filters = ['TODAS', 'EN_PROGRESO', 'COMPLETADA', 'PLANIFICADA']
-
-  const filtered = filter === 'TODAS' ? misiones : misiones.filter((m) => m.estado === filter)
+export function MisionesSection({ projects }: MisionesSectionProps): JSX.Element {
+  const [filter, setFilter] = useState('TODOS')
+  const categories = ['TODOS', ...Array.from(new Set(projects.map((p) => p.category).filter(Boolean) as string[]))]
+  const featured = projects.filter((p) => p.featured)
+  const filtered = filter === 'TODOS'
+    ? [...projects].sort((a, b) => a.sort_order - b.sort_order)
+    : projects.filter((p) => p.category === filter).sort((a, b) => a.sort_order - b.sort_order)
 
   return (
     <SectionWrapper
       id="misiones"
-      label="// operations.log"
+      label="// projects.db"
       title="Misiones"
       titleColor="green"
     >
-      {misiones.length === 0 ? (
+      {projects.length === 0 ? (
         <div className="text-center text-slate-500 font-mono-custom py-12">
-          {'> sin_misiones_activas — inicia desde /admin'}
+          {'> sin_proyectos — agrega misiones desde /admin'}
         </div>
       ) : (
         <>
-          {/* Filter tabs */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {filters.map((f) => {
-              const color = f === 'TODAS' ? '#00E5FF' : getEstadoColor(f)
-              return (
+          {/* Featured */}
+          {featured.length > 0 ? (
+            <div className="mb-8">
+              <p className="section-label mb-4">DESTACADOS</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {featured.slice(0, 2).map((p, i) => (
+                  <motion.a
+                    key={p.id}
+                    href={p.project_url ?? '#'}
+                    target={p.project_url ? '_blank' : undefined}
+                    rel="noopener noreferrer"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    whileHover={{ y: -4 }}
+                    className="glass-card overflow-hidden group border-[rgba(0,255,136,0.2)] hover:border-[rgba(0,255,136,0.4)] hover:shadow-[0_0_30px_rgba(0,255,136,0.1)] transition-all duration-300"
+                  >
+                    {p.image_url ? (
+                      <div className="h-48 overflow-hidden">
+                        <img
+                          src={p.image_url}
+                          alt={p.name}
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                        />
+                      </div>
+                    ) : (
+                      <div className="h-48 bg-[rgba(0,255,136,0.05)] flex items-center justify-center">
+                        <span className="font-mono-custom text-5xl opacity-30">⚡</span>
+                      </div>
+                    )}
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        {p.category ? (
+                          <span className="font-mono-custom text-xs text-[#00FF88] bg-[rgba(0,255,136,0.1)] px-2 py-0.5 rounded">
+                            {p.category}
+                          </span>
+                        ) : null}
+                        <span className="font-mono-custom text-xs text-[#F59E0B]">★ DESTACADO</span>
+                      </div>
+                      <h3 className="font-mono-custom font-bold text-slate-200 group-hover:text-[#00FF88] transition-colors">
+                        {p.name}
+                      </h3>
+                      {p.description ? (
+                        <p className="font-mono-custom text-xs text-slate-500 mt-2 line-clamp-2">{p.description}</p>
+                      ) : null}
+                    </div>
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Filter */}
+          {categories.length > 1 ? (
+            <div className="flex flex-wrap gap-2 mb-6">
+              {categories.map((cat) => (
                 <button
-                  key={f}
-                  onClick={() => setFilter(f)}
+                  key={cat}
+                  onClick={() => setFilter(cat)}
                   className="font-mono-custom text-xs px-3 py-1.5 rounded border transition-all duration-200"
                   style={
-                    filter === f
-                      ? { background: `${color}20`, borderColor: color, color }
+                    filter === cat
+                      ? { background: 'rgba(0,255,136,0.1)', borderColor: '#00FF88', color: '#00FF88' }
                       : { borderColor: 'rgba(255,255,255,0.1)', color: '#64748B' }
                   }
                 >
-                  {f === 'TODAS' ? 'TODAS' : ESTADO_LABELS[f]}
+                  {cat}
                 </button>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          ) : null}
 
-          {/* Missions grid */}
+          {/* All projects grid */}
           <AnimatePresence mode="wait">
             <motion.div
               key={filter}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
             >
-              {filtered.map((mision, i) => {
-                const color = getEstadoColor(mision.estado)
-                return (
-                  <motion.div
-                    key={mision.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                  >
-                    <GlassCard
-                      hover
-                      glow="none"
-                      className="h-full flex flex-col group"
-                      style={{ borderColor: `${color}25` } as React.CSSProperties}
-                    >
-                      {/* Status badge */}
-                      <div className="flex items-center justify-between mb-4">
-                        <span
-                          className="font-mono-custom text-xs px-2 py-1 rounded"
-                          style={{ background: `${color}15`, color }}
-                        >
-                          {ESTADO_LABELS[mision.estado]}
+              {filtered.map((p, i) => (
+                <motion.a
+                  key={p.id}
+                  href={p.project_url ?? '#'}
+                  target={p.project_url ? '_blank' : undefined}
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  whileHover={{ y: -3 }}
+                  className="glass-card group hover:border-[rgba(0,229,255,0.3)] hover:shadow-[0_0_20px_rgba(0,229,255,0.08)] transition-all duration-300"
+                >
+                  {p.image_url ? (
+                    <div className="h-36 overflow-hidden rounded-lg mb-4">
+                      <img
+                        src={p.image_url}
+                        alt={p.name}
+                        className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity"
+                      />
+                    </div>
+                  ) : null}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      {p.category ? (
+                        <span className="font-mono-custom text-xs text-[#9B5CFF] bg-[rgba(155,92,255,0.1)] px-2 py-0.5 rounded mb-2 inline-block">
+                          {p.category}
                         </span>
-                        <DifficultyBars nivel={mision.dificultad} />
-                      </div>
-
-                      {/* Mission image */}
-                      {mision.imagen_url ? (
-                        <div className="relative h-40 mb-4 rounded-lg overflow-hidden border border-[rgba(0,229,255,0.1)]">
-                          <img
-                            src={mision.imagen_url}
-                            alt={mision.titulo}
-                            className="w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D1A] to-transparent" />
-                        </div>
-                      ) : (
-                        <div className="h-2 mb-4 rounded-full" style={{ background: `linear-gradient(90deg, ${color}40, transparent)` }} />
-                      )}
-
-                      {/* Content */}
-                      <h3 className="font-mono-custom font-bold text-slate-200 mb-2 group-hover:text-[#00E5FF] transition-colors">
-                        {mision.titulo}
+                      ) : null}
+                      <h3 className="font-mono-custom font-bold text-sm text-slate-200 group-hover:text-[#00E5FF] transition-colors">
+                        {p.name}
                       </h3>
-                      <p className="font-mono-custom text-xs text-slate-500 leading-relaxed flex-1 mb-4">
-                        {mision.descripcion}
-                      </p>
-
-                      {/* Technologies */}
-                      {mision.tecnologias.length > 0 ? (
-                        <div className="flex flex-wrap gap-1 mb-4">
-                          {mision.tecnologias.map((tech) => (
-                            <span
-                              key={tech}
-                              className="font-mono-custom text-xs px-2 py-0.5 rounded bg-[rgba(0,229,255,0.05)] border border-[rgba(0,229,255,0.1)] text-slate-400"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
+                      {p.description ? (
+                        <p className="font-mono-custom text-xs text-slate-500 mt-2 line-clamp-2">{p.description}</p>
                       ) : null}
-
-                      {/* Dates */}
-                      {mision.fecha_inicio ? (
-                        <p className="font-mono-custom text-xs text-slate-600 mb-4">
-                          {formatDate(mision.fecha_inicio)}
-                          {mision.fecha_fin ? ` → ${formatDate(mision.fecha_fin)}` : ' → presente'}
-                        </p>
-                      ) : null}
-
-                      {/* Links */}
-                      <div className="flex gap-3 pt-3 border-t border-[rgba(255,255,255,0.05)]">
-                        {mision.github_url ? (
-                          <a
-                            href={mision.github_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono-custom text-xs text-[#00E5FF] hover:underline transition-all"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            [github]
-                          </a>
-                        ) : null}
-                        {mision.demo_url ? (
-                          <a
-                            href={mision.demo_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono-custom text-xs text-[#00FF88] hover:underline transition-all"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            [demo]
-                          </a>
-                        ) : null}
-                      </div>
-                    </GlassCard>
-                  </motion.div>
-                )
-              })}
+                    </div>
+                    {p.project_url ? (
+                      <span className="font-mono-custom text-xs text-[#00E5FF] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">→</span>
+                    ) : null}
+                  </div>
+                </motion.a>
+              ))}
             </motion.div>
           </AnimatePresence>
         </>
@@ -189,5 +160,3 @@ function MisionesSection({ misiones }: MisionesSectionProps): JSX.Element {
     </SectionWrapper>
   )
 }
-
-export { MisionesSection }

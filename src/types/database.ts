@@ -1,183 +1,222 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+// ============================================================
+// Database types matching the actual Supabase schema
+// ============================================================
 
-// Row types
-export interface RegistroMensualRow {
+export interface MonthlyEntry {
   id: string
-  mes: string
-  ano: number
-  horas_estudio: number
-  certs_completados: number
-  proyectos_activos: number
-  vulnerabilidades_encontradas: number
-  nivel_xp: number
-  notas: string | null
+  month: string
+  title: string
+  highlight_word: string | null
+  description: string | null
+  status: 'activo' | 'completado' | 'pendiente'
+  image_url: string | null
   created_at: string
+}
+
+export interface Skill {
+  id: string
+  name: string
+  percentage: number
+  color_class: string
+  sort_order: number
+}
+
+export interface Stat {
+  id: string
+  label: string
+  value: string
+  suffix: string | null
+  sort_order: number
+}
+
+export interface Project {
+  id: string
+  name: string
+  category: string | null
+  description: string | null
+  image_url: string | null
+  project_url: string | null
+  featured: boolean
+  sort_order: number
+  created_at: string
+}
+
+export interface Certificate {
+  id: string
+  name: string
+  issuer: string
+  date: string
+  file_url: string | null
+  file_type: string | null
+  thumbnail_url: string | null
+  created_at: string
+}
+
+export interface Achievement {
+  id: string
+  title: string
+  category: string | null
+  description: string | null
+  image_url: string | null
+  event_url: string | null
+  created_at: string
+}
+
+export interface Objective {
+  id: string
+  title: string
+  date_label: string | null
+  status: 'activo' | 'pendiente' | 'completado'
+  sort_order: number
+}
+
+export interface SiteConfig {
+  id: string
+  key: string
+  value: string | null
   updated_at: string
 }
 
-export interface ArsenalTecnicoRow {
+export interface Gallery {
   id: string
-  nombre: string
-  categoria: string
-  nivel: number
-  icono: string | null
-  color: string | null
-  descripcion: string | null
-  orden: number
-  activo: boolean
+  title: string
+  category: string | null
+  description: string | null
+  image_url: string | null
+  tools: string | null
+  featured: boolean
+  sort_order: number
   created_at: string
-  updated_at: string
 }
 
-export interface MisionRow {
+export interface ActivityLog {
   id: string
-  titulo: string
-  descripcion: string
-  estado: 'COMPLETADA' | 'EN_PROGRESO' | 'PLANIFICADA'
-  tecnologias: string[]
-  github_url: string | null
-  demo_url: string | null
-  imagen_url: string | null
-  fecha_inicio: string | null
-  fecha_fin: string | null
-  dificultad: number
-  orden: number
-  activo: boolean
+  date: string
+  type: 'certificado' | 'proyecto' | 'skill' | 'logro' | 'estudio' | 'freelance'
+  title: string
+  description: string | null
+  xp_gained: number
   created_at: string
-  updated_at: string
 }
 
-export interface CertificadoRow {
+// Parsed site config
+export interface SiteConfigMap {
+  hero_name: string
+  hero_year: string
+  hero_subtitle: string
+  hero_photo_url: string
+  recap_video_url: string
+  launch_mode: string
+  launch_date: string
+  launch_title: string
+  launch_subtitle: string
+  // Bio / Sobre Mi
+  bio_quote: string
+  bio_description: string
+  bio_years: string
+  bio_languages: string
+  bio_clouds: string
+  // Contact & Social
+  contact_email: string
+  github_url: string
+  linkedin_url: string
+  twitter_url: string
+  // Terminal
+  terminal_name: string
+  terminal_alias: string
+  terminal_role: string
+}
+
+export const MONTH_NAMES: Record<number, string> = {
+  1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+  5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+  9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre',
+}
+
+export const STATUS_COLORS: Record<string, string> = {
+  completado: '#00FF88',
+  pendiente: '#9B5CFF',
+  activo: '#00E5FF',
+}
+
+export const STATUS_LABELS: Record<string, string> = {
+  completado: '✓ COMPLETADO',
+  pendiente: '○ PENDIENTE',
+  activo: '◎ ACTIVO',
+}
+
+export const COLOR_MAP: Record<string, string> = {
+  purple: '#9B5CFF',
+  cyan: '#00E5FF',
+  green: '#00FF88',
+  red: '#FF4444',
+  yellow: '#F59E0B',
+  pink: '#FF6B9D',
+  orange: '#FF8C42',
+}
+
+export const ACTIVITY_TYPES: Record<ActivityLog['type'], { label: string; color: string; icon: string }> = {
+  certificado: { label: 'Certificado', color: '#00E5FF', icon: '🏆' },
+  proyecto:    { label: 'Proyecto',    color: '#F59E0B', icon: '🎯' },
+  skill:       { label: 'Skill',       color: '#9B5CFF', icon: '⚡' },
+  logro:       { label: 'Logro',       color: '#00FF88', icon: '🛡️' },
+  estudio:     { label: 'Estudio',     color: '#00E5FF', icon: '📚' },
+  freelance:   { label: 'Freelance',   color: '#FF6B9D', icon: '💼' },
+}
+
+export interface ManifestoItem {
   id: string
-  titulo: string
-  emisor: string
-  fecha_emision: string
-  fecha_expiracion: string | null
-  credencial_id: string | null
-  credencial_url: string | null
-  pdf_url: string | null
-  imagen_url: string | null
-  categoria: string
-  orden: number
-  activo: boolean
-  created_at: string
-  updated_at: string
+  number: string
+  title: string
+  body: string
+  color: string
+  icon_name: string
+  sort_order: number
 }
 
-export interface LogroRow {
+export interface ArmeriaLayer {
   id: string
-  titulo: string
-  descripcion: string
-  icono: string
-  tipo: 'BADGE' | 'TROPHY' | 'STAR' | 'SHIELD'
-  fecha: string
-  puntos_xp: number
-  rareza: 'COMUN' | 'RARO' | 'EPICO' | 'LEGENDARIO'
-  orden: number
-  activo: boolean
-  created_at: string
-  updated_at: string
+  layer_name: string
+  color: string
+  icon_name: string
+  techs: string          // comma-separated
+  philosophy: string
+  sort_order: number
 }
 
-export interface ObjetivoRow {
+export interface Service {
   id: string
-  titulo: string
-  descripcion: string
-  progreso: number
-  meta: number
-  unidad: string
-  categoria: string
-  fecha_limite: string | null
-  completado: boolean
-  orden: number
-  activo: boolean
-  created_at: string
-  updated_at: string
+  number: string
+  title: string
+  tagline: string
+  description: string
+  bullets: string        // JSON array of strings
+  stack: string          // comma-separated
+  color: string
+  sort_order: number
 }
 
-export interface PerfilRow {
+export interface ContactMessage {
   id: string
-  nombre: string
-  alias: string
-  titulo: string
-  bio: string
-  avatar_url: string | null
-  github_url: string | null
-  linkedin_url: string | null
-  email: string | null
-  ubicacion: string | null
-  disponible: boolean
-  total_xp: number
-  nivel: number
+  name: string
+  email: string
+  project_type: string | null
+  budget: string | null
+  brief: string
+  status: 'nuevo' | 'leido' | 'respondido' | 'eliminado'
+  replied_at: string | null
   created_at: string
-  updated_at: string
 }
 
-// Insert types
-export type RegistroMensualInsert = Omit<RegistroMensualRow, 'id' | 'created_at' | 'updated_at'>
-export type ArsenalTecnicoInsert = Omit<ArsenalTecnicoRow, 'id' | 'created_at' | 'updated_at'>
-export type MisionInsert = Omit<MisionRow, 'id' | 'created_at' | 'updated_at'>
-export type CertificadoInsert = Omit<CertificadoRow, 'id' | 'created_at' | 'updated_at'>
-export type LogroInsert = Omit<LogroRow, 'id' | 'created_at' | 'updated_at'>
-export type ObjetivoInsert = Omit<ObjetivoRow, 'id' | 'created_at' | 'updated_at'>
-export type PerfilInsert = Omit<PerfilRow, 'id' | 'created_at' | 'updated_at'>
+export const GALLERY_CATEGORIES = ['UI/UX', 'Photoshop', 'Multimedia', '3D', 'Branding', 'Motion', 'Ilustración', 'Web Design']
 
-export interface Database {
-  public: {
-    Tables: {
-      registro_mensual: {
-        Row: RegistroMensualRow
-        Insert: RegistroMensualInsert
-        Update: Partial<RegistroMensualInsert>
-      }
-      arsenal_tecnico: {
-        Row: ArsenalTecnicoRow
-        Insert: ArsenalTecnicoInsert
-        Update: Partial<ArsenalTecnicoInsert>
-      }
-      misiones: {
-        Row: MisionRow
-        Insert: MisionInsert
-        Update: Partial<MisionInsert>
-      }
-      certificados: {
-        Row: CertificadoRow
-        Insert: CertificadoInsert
-        Update: Partial<CertificadoInsert>
-      }
-      logros: {
-        Row: LogroRow
-        Insert: LogroInsert
-        Update: Partial<LogroInsert>
-      }
-      objetivos: {
-        Row: ObjetivoRow
-        Insert: ObjetivoInsert
-        Update: Partial<ObjetivoInsert>
-      }
-      perfil: {
-        Row: PerfilRow
-        Insert: PerfilInsert
-        Update: Partial<PerfilInsert>
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-  }
-}
-
-// Convenience aliases
-export type RegistroMensual = RegistroMensualRow
-export type ArsenalTecnico = ArsenalTecnicoRow
-export type Mision = MisionRow
-export type Certificado = CertificadoRow
-export type Logro = LogroRow
-export type Objetivo = ObjetivoRow
-export type Perfil = PerfilRow
+export const XP_LEVELS = [
+  { level: 1, name: 'Iniciado',     min: 0,     max: 500   },
+  { level: 2, name: 'Aprendiz',     min: 500,   max: 1500  },
+  { level: 3, name: 'Desarrollador',min: 1500,  max: 3500  },
+  { level: 4, name: 'Ingeniero',    min: 3500,  max: 7000  },
+  { level: 5, name: 'Arquitecto',   min: 7000,  max: 12000 },
+  { level: 6, name: 'Master',       min: 12000, max: 20000 },
+  { level: 7, name: 'Elite',        min: 20000, max: 35000 },
+  { level: 8, name: 'Leyenda',      min: 35000, max: Infinity },
+]
