@@ -13,7 +13,9 @@
       "Bash(PATH=\"/c/Program Files/nodejs:$PATH\" npx --prefix \"/c/Users/The Monarch/Desktop/PORTAFOLIO PERSONAL\" tsc --noEmit --project \"/c/Users/The Monarch/Desktop/PORTAFOLIO PERSONAL/tsconfig.json\" 2>&1 | head -80)",
       "Bash(find:*)",
       "Bash(curl:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(winget install:*)",
+      "Bash(gh:*)"
     ]
   }
 }

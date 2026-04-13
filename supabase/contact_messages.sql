@@ -22,3 +22,5 @@ create policy "admin_all_contact" on contact_messages
 -- Public can insert (submit contact form) — no select/update/delete
 create policy "public_insert_contact" on contact_messages
   for insert with check (true);
+
+  
